@@ -1,17 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type UserId = string;
-export interface User {
-	name: string;
-	email: string;
-	github: string;
-}
-
-export interface UsersWithId extends User {
-	id: UserId;
-}
-
-const initialState: UsersWithId[] = [
+const DEFAULT_STATE = [
 	{
 		id: "2",
 		name: "Peter Doe",
@@ -39,10 +28,33 @@ const initialState: UsersWithId[] = [
 	},
 ];
 
+type UserId = string;
+export interface User {
+	name: string;
+	email: string;
+	github: string;
+}
+
+export interface UsersWithId extends User {
+	id: UserId;
+}
+
+const initialState: UsersWithId[] = (() => {
+	const reduxState = localStorage.getItem("reduxState");
+	if (reduxState) {
+		return JSON.parse(reduxState).users;
+	}
+	return DEFAULT_STATE;
+})();
+
 const usersSlice = createSlice({
 	name: "users",
 	initialState,
 	reducers: {
+		addNewUser: (state, action: PayloadAction<User>) => {
+			const id = crypto.randomUUID();
+			return [...state, { ...action.payload, id }];
+		},
 		deleteUserById: (state, action: PayloadAction<UserId>) => {
 			const id = action.payload;
 			return state.filter((user) => user.id !== id);
@@ -50,6 +62,6 @@ const usersSlice = createSlice({
 	},
 });
 
-export const { deleteUserById } = usersSlice.actions;
+export const { deleteUserById, addNewUser } = usersSlice.actions;
 
 export default usersSlice.reducer;
